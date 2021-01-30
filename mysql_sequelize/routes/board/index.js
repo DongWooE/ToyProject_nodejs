@@ -19,7 +19,6 @@ router.route('/')
 .post(isLoggedIn, async(req,res,next)=>{
 
     const { bbsTitle, bbsContent} = req.body;
-
     try{
         await Board.create({
             bbsTitle,
@@ -40,8 +39,9 @@ router.route('/:id')
     const boardID = req.params.id;
     try{
         const result = await Board.findOne({where : {id : boardID}});
+        const temp = result.bbsViews+1;
         result.update({
-            bbsViews : bbsViews+1,
+            bbsViews : temp,
         }); 
         return res.json(result);
     }
@@ -49,6 +49,25 @@ router.route('/:id')
         console.error(err);
         next(err);
     }
+})
+
+.post(isLoggedIn, async(req,res,next)=>{
+    
+    const boardID = req.params.id;
+    const { recommend } = req.body;
+    try{
+        const result = await Board.findOne({where: {id : boardID}});
+        const temp = result.bbsReco + (+recommend);
+        result.update({
+            bbsReco : temp,
+        });
+        return res.json({state: "boardRecoChanged"});
+    }
+    catch(err){
+        console.error(err);
+        next(err);
+    } 
+
 })
 
 .patch(isLoggedIn, async(req,res,next)=>{

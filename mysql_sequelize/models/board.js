@@ -41,6 +41,6 @@ module.exports = class Board extends Sequelize.Model{
 
     
     static associate(db) {
-        db.Board.belongsTo(db.User, {foreignkey: 'boarder', targetKey: 'userID'});
+        db.Board.belongsTo(db.User, {foreignKey: 'boarder', targetKey: 'userID'});
       }
 }
