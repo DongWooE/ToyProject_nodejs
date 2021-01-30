@@ -12,7 +12,8 @@ const passportConfig = require('./passport');       //index.js와 passport/index
 
 passportConfig();
 dotenv.config();
-const authRouter = require('./routes/auth');
+const authRouter = require('./routes/auth/auth');
+const boardRouter = require('./routes/board');
 
 
 app.set('port', process.env.PORT || 3001);
@@ -46,6 +47,7 @@ app.use(passport.session());        //request.session 객체에 passport 정보�
 
 
 app.use('/auth', authRouter);
+app.use('/board', boardRouter);
 
 
 

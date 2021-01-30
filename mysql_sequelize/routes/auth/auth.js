@@ -1,7 +1,7 @@
 const express = require('express');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
-const User = require('../models/user');
+const User = require('../../models/user');
 const { isLoggedIn, isNotLoggedIn} = require('./middleware');
 
 const router = express.Router();
@@ -48,7 +48,7 @@ router.post('/login', isNotLoggedIn, (req,res,next)=>{      //이 자체도 미�
                 console.error(loginError);
                 return next(loginError);
             }   //여기에서 세션쿠키를 브라우저에 보내준다
-            return res.json({state : "loginSucc"});
+            return res.json({state : "loginSuccess"});
         });
     })(req,res,next);
 
