@@ -1,22 +1,13 @@
 const Sequelize = require('sequelize');
 
-module.exports = class Board extends Sequelize.Model{
+module.exports = class Comment extends Sequelize.Model{
     static init(sequelize){
         return super.init({
-            bbsTitle: {
-                type: Sequelize.STRING(100),
-                allowNull: false,
-            },
-            bbsContent: {
+            commentContent: {
                 type: Sequelize.TEXT,
                 allowNull: false,
             },
-            bbsViews:{
-                type: Sequelize.INTEGER.UNSIGNED,
-                allowNull: false,
-                defaultValue : 0,
-            },
-            bbsReco:{
+            commentReco:{
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 defaultValue : 0,
@@ -31,8 +22,8 @@ module.exports = class Board extends Sequelize.Model{
             timestamps: false,
             underscored: false,
             paranoid: false,     
-            modelName: 'Board',
-            tableName: 'boards',
+            modelName: 'Comment',
+            tableName: 'comments',
             charset: 'utf8',
             collate: 'utf8_general_ci',
        });    
@@ -41,7 +32,7 @@ module.exports = class Board extends Sequelize.Model{
 
     
     static associate(db) {
-        db.Board.belongsTo(db.User, {foreignKey: 'boarder', targetKey: 'userID'});
-        db.Board.hasMany(db.Comment, { foreignKey: 'boardID', sourceKey: 'id' });
+        db.Comment.belongsTo(db.User, {foreignKey: 'commenter', targetKey: 'userID'})
+        db.Comment.belongsTo(db.Board, {foreignKey: 'boardID', targetKey: 'id'});
       }
 }
