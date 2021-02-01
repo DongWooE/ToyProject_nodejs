@@ -9,11 +9,14 @@ const router = express.Router();
 router.route('/:id')
 .get(isLoggedIn, async(req,res,next)=>{
     try{
-        const temp = await Board.findOne({
-            where : {id : req.params.id},
+        const temp = await Comment.findAll({
+            include: {
+                model: Board,
+                where : {id : req.params.id},
+            },
         });
-        const result = await temp.getComments;
-        res.json(result);
+        if(!temp) res.json({state : "notExisted"});
+        return res.json(temp);
     }
     catch(err){
         console.error(err);
