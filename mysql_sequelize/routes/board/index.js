@@ -1,5 +1,6 @@
 const express = require('express');
 const Board = require('../../models/board');
+const Hashtag =require('../../models/hashtag');
 const { isLoggedIn} = require('../auth/middleware');
 
 const router = express.Router();
@@ -18,15 +19,29 @@ router.route('/')
 })
 .post(isLoggedIn, async(req,res,next)=>{
 
-    const { bbsTitle, bbsContent} = req.body;
+    const { bbsTitle, bbsContent, hashTagContent} = req.body;
     try{
-        await Board.create({
+
+        const board = await Board.create({
             bbsTitle,
             bbsContent,
             boarder: req.user.userID,
+            hashTagContent,
             });
+
+        const hashtags = hashTagContent.match(/#[^\s#]*/g);
+        if(hashtags){
+            const result = await Promise.all(
+                hashtags.map(tag => {
+                    return Hashtag.findOrCreate({
+                        where : { Content : tag.slice(1).toLowerCase()}
+                    })
+                })
+            )
+            await board.addHashtags(result.map(r => r[0]));
+        }
             return res.json({state : "boardSuccess"});
-    }
+        }
     catch(err){
         console.error(err);
         next(err);

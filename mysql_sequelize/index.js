@@ -15,7 +15,7 @@ dotenv.config();
 const authRouter = require('./routes/auth/auth');
 const boardRouter = require('./routes/board');
 const commentRouter = require('./routes/comment');
-
+const searchRouter = require('./routes/search');
 
 app.set('port', process.env.PORT || 3001);
 app.use(morgan('dev'));
@@ -50,7 +50,7 @@ app.use(passport.session());        //request.session 객체에 passport 정보�
 app.use('/auth', authRouter);
 app.use('/board', boardRouter);
 app.use('/comment', commentRouter);
-
+app.use('/search', searchRouter);
 
 app.listen(app.get('port'), ()=>{
     console.log(app.get('port'), '번 포트에서 대기 중');
