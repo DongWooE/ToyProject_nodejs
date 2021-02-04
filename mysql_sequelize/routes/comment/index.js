@@ -1,13 +1,13 @@
 const express = require('express');
 const Board = require('../../models/board');
 const Comment = require('../../models/comment');
-const { isLoggedIn} = require('../auth/middleware');
+const { verifyToken } = require('../auth/middleware');
 
 const router = express.Router();
 
 
 router.route('/:id')
-.get(isLoggedIn, async(req,res,next)=>{
+.get( async(req,res,next)=>{
     try{
         const temp = await Comment.findAll({
             include: {
@@ -23,14 +23,14 @@ router.route('/:id')
         next(err);
     }
 })
-.post(isLoggedIn, async(req,res,next)=>{
+.post( verifyToken, async(req,res,next)=>{
 
     const { commentContent } = req.body;
     try{
         await Comment.create({
             commentContent,
             boardID: req.params.id,
-            commenter: req.user.userID,
+            commenter: res.locals.user,
             });
             return res.json({state : "commentSuccess"});
     }
@@ -41,7 +41,7 @@ router.route('/:id')
 });
 
 router.route('/:id/:class')
-.get(isLoggedIn, async(req,res,next)=>{
+.get( async(req,res,next)=>{
 
     const commentID = req.params.class;
     try{
@@ -54,7 +54,7 @@ router.route('/:id/:class')
     }
 })
 
-.post(isLoggedIn, async(req,res,next)=>{
+.post( async(req,res,next)=>{
     
     const commentID = req.params.class;
     const { recommend } = req.body;
@@ -73,7 +73,7 @@ router.route('/:id/:class')
 
 })
 
-.patch(isLoggedIn, async(req,res,next)=>{
+.patch( async(req,res,next)=>{
     const {commentContent} = req.body;
     try{
         await Comment.update({
@@ -89,7 +89,7 @@ router.route('/:id/:class')
     }
 })
 
-.delete(isLoggedIn, async(req,res,next)=>{
+.delete( async(req,res,next)=>{
     try{
         await Comment.destroy({
             where: {id: req.params.class},

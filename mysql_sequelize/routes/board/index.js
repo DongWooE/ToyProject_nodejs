@@ -1,34 +1,34 @@
 const express = require('express');
+const { User } = require('../../models');
 const Board = require('../../models/board');
 const Hashtag =require('../../models/hashtag');
-const { isLoggedIn} = require('../auth/middleware');
+const { verifyToken } = require('../auth/middleware');
 
 const router = express.Router();
 
 
 router.route('/')
-.get(isLoggedIn, async(req,res,next)=>{
+.get(async(req,res,next)=>{
     try{
-        const result = await Board.findAll({ attributes: ['bbsTitle', 'boarder']});
+        const result = await Board.findAll({ attributes: ['bbsTitle', 'bbsContent','boarder','created_at', 'hashTagContent']});
         res.json(result);
     }
     catch(err){
         console.error(err);
         next(err);
     }
-})
-.post(isLoggedIn, async(req,res,next)=>{
+});
 
+router.route('/new')
+.post( verifyToken, async(req,res,next)=>{
+    const user = await User.findOne({where : {userID : res.locals.user}});
     const { bbsTitle, bbsContent, hashTagContent} = req.body;
     try{
-
         const board = await Board.create({
             bbsTitle,
             bbsContent,
-            boarder: req.user.userID,
             hashTagContent,
             });
-
         const hashtags = hashTagContent.match(/#[^\s#]*/g);
         if(hashtags){
             const result = await Promise.all(
@@ -40,6 +40,7 @@ router.route('/')
             )
             await board.addHashtags(result.map(r => r[0]));
         }
+        await user.addBoard(board);
             return res.json({state : "boardSuccess"});
         }
     catch(err){
@@ -49,7 +50,7 @@ router.route('/')
 });
 
 router.route('/:id')
-.get(isLoggedIn, async(req,res,next)=>{
+.get( async(req,res,next)=>{
 
     const boardID = req.params.id;
     try{
@@ -66,7 +67,7 @@ router.route('/:id')
     }
 })
 
-.post(isLoggedIn, async(req,res,next)=>{
+.post( async(req,res,next)=>{
     
     const boardID = req.params.id;
     const { recommend } = req.body;
@@ -85,7 +86,7 @@ router.route('/:id')
 
 })
 
-.patch(isLoggedIn, async(req,res,next)=>{
+.patch( async(req,res,next)=>{
     const {bbsTitle, bbsContent} = req.body;
     try{
         await Board.update({
@@ -102,7 +103,7 @@ router.route('/:id')
     }
 })
 
-.delete(isLoggedIn, async(req,res,next)=>{
+.delete( async(req,res,next)=>{
     try{
         await Board.destroy({
             where: {id: req.params.id},
