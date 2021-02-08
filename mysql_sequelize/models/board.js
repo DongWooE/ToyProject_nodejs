@@ -25,14 +25,9 @@ module.exports = class Board extends Sequelize.Model{
                 type: Sequelize.STRING(40),
                 allowNull: true,
             },
-            created_at: {
-                type: Sequelize.DATE,
-                allowNull: false,
-                defaultValue: Sequelize.NOW,
-            },
         },{
             sequelize,
-            timestamps: false,
+            timestamps: true,
             underscored: false,
             paranoid: false,     
             modelName: 'Board',
@@ -46,7 +41,11 @@ module.exports = class Board extends Sequelize.Model{
     
     static associate(db) {
         db.Board.belongsTo(db.User, {foreignKey: 'boarder', targetKey: 'userID'});
-        db.Board.hasMany(db.Comment, { foreignKey: 'boardID', sourceKey: 'id' });
         db.Board.belongsToMany(db.Hashtag, {through: 'BoardHashtag'});
+
+        db.Board.hasMany(db.Answer, {foreignKey: 'boardID', sourceKey : 'id'});
+        db.Board.hasMany(db.BoardComment, {foreignKey: 'boardID', sourceKey : 'id'});
+        db.Board.hasMany(db.BoardLike, {foreignKey: 'boardID', sourceKey : 'id'});
+        
       }
 }

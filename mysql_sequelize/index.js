@@ -15,7 +15,7 @@ const cors = require('cors');
 dotenv.config();
 const authRouter = require('./routes/auth/auth');
 const boardRouter = require('./routes/board');
-const commentRouter = require('./routes/comment');
+const commentRouter = require('./routes/comment/board');
 const searchRouter = require('./routes/search');
 
 app.set('port', process.env.PORT || 3001);
@@ -51,8 +51,8 @@ sequelize.sync({force : false})
 
 
 app.use('/auth', authRouter);
-app.use('/board', boardRouter);
-app.use('/comment', commentRouter);
+app.use('/boards', boardRouter);
+app.use('/comments', commentRouter);
 app.use('/search', searchRouter);
 
 app.listen(app.get('port'), ()=>{

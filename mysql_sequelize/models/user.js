@@ -22,19 +22,14 @@ module.exports = class User extends Sequelize.Model{
                 allowNull : true,
                 defaultValue : 0,
             },
-            created_at: {
-                type : Sequelize.DATE,
-                allowNull : false,
-                defaultValue : Sequelize.NOW,
-            },
         },
         {
             sequelize,
-            timestamps: false,
+            timestamps: true,
             underscored: false,
             modelName : 'User',
             tableName : 'users',
-            paranoid : false,
+            paranoid : true,
             charset : "utf8",
             collate: 'utf8_general_ci'
         }
@@ -46,7 +41,13 @@ module.exports = class User extends Sequelize.Model{
     
     static associate(db) {
         db.User.hasMany(db.Board, { foreignKey: 'boarder', sourceKey: 'userID' });
-        db.User.hasMany(db.Comment, {foreignKey: 'commenter', sourceKey: 'userID'});
+        db.User.hasMany(db.BoardComment, { foreignKey: 'boardCommenter', sourceKey: 'userID' });
+        db.User.hasMany(db.BoardLike, { foreignKey: 'userID', sourceKey: 'userID' });
+
+        db.User.hasMany(db.Answer, { foreignKey: 'answerer', sourceKey: 'userID' });
+        db.User.hasMany(db.AnswerComment, { foreignKey: 'answerCommenter', sourceKey: 'userID' });
+        db.User.hasMany(db.AnswerLike, { foreignKey: 'userID', sourceKey: 'userID' });
+
       }
 
 }

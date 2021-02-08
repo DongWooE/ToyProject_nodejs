@@ -40,7 +40,7 @@ router.route('/new')
             )
             await board.addHashtags(result.map(r => r[0]));
         }
-        await user.addBoard(board);
+        await user.addBoards(board);
             return res.json({state : "boardSuccess"});
         }
     catch(err){

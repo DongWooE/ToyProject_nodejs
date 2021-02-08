@@ -72,8 +72,8 @@ router.post('/login',  async(req,res,next) =>{
             });
             res.cookie('user', token);
             return res.json({
-                state : "tokenIssued",
-                token,
+                state : "loginSuccess",
+                nick : exUser.userName,
             });
         }
         else{
