@@ -25,12 +25,13 @@ app.use(cors({origin:true, credentials : true}));
 app.use(express.urlencoded({extended: false}));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 //DB 연동부분
-sequelize.sync({force : false})
+sequelize.sync({force : true})
 .then(()=>{
     console.log("DB 연결 성공");
 })
 .catch((err)=>{
     console.log('DB 연결 실패');
+    console.error(err);
 });
 
 

@@ -6,7 +6,7 @@ module.exports = class BoardLike extends Sequelize.Model{
             isAdd: {
                 type: Boolean,
                 allowNull: false,
-                defaultValue : false,
+                defaultValue : 'false',
             },
         },{
             sequelize,
@@ -23,7 +23,7 @@ module.exports = class BoardLike extends Sequelize.Model{
 
     
     static associate(db) {
-        db.Comment.belongsTo(db.User, {foreignKey: 'userID', targetKey: 'userID'})
-        db.Comment.belongsTo(db.Board, {foreignKey: 'boardID', targetKey: 'id'});
+        db.BoardLike.belongsTo(db.User, {foreignKey: 'userID', targetKey: 'userID'})
+        db.BoardLike.belongsTo(db.Board, {foreignKey: 'boardID', targetKey: 'id'});
       }
 }

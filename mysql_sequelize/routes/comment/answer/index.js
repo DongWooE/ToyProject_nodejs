@@ -4,7 +4,7 @@ const { verifyToken } = require('../../auth/middleware');
 
 const router = express.Router();
 
-router.routes(verifyToken, '/:id/:class')
+router.route(verifyToken, '/:id/:class')
 
 .get(async(req,res,next) =>{
     try{

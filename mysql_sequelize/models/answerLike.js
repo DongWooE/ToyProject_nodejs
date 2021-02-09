@@ -6,7 +6,7 @@ module.exports = class AnswerLike extends Sequelize.Model{
             isAdd: {
                 type: Boolean,
                 allowNull: false,
-                defaultValue : false,
+                defaultValue : 'false',
             },
         },{
             sequelize,
