@@ -4,9 +4,9 @@ module.exports = class AnswerLike extends Sequelize.Model{
     static init(sequelize){
         return super.init({
             isAdd: {
-                type: Boolean,
+                type: Sequelize.BOOLEAN,
                 allowNull: false,
-                defaultValue : 'false',
+                defaultValue : false,
             },
         },{
             sequelize,
