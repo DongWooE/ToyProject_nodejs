@@ -1,7 +1,5 @@
 const express = require('express');
-const { User } = require('../../models');
-const Board = require('../../models/board');
-const Hashtag =require('../../models/hashtag');
+const { User, Board, Hashtag, Answer } = require('../../models');
 const { verifyToken } = require('../auth/middleware');
 
 const router = express.Router();
@@ -10,7 +8,14 @@ const router = express.Router();
 router.route('/')
 .get(async(req,res,next)=>{
     try{
-        const result = await Board.findAll({ attributes: ['bbsTitle', 'bbsContent','boarder','created_at', 'hashTagContent']});
+        const { limit, offset } = req.query;    // 페이징
+        const temp = await Board.findAll({ limit, offset});       //페이징으로 나눠서 갖고 오기
+        for(board in result){
+            const num = await board.getAnswers().count();   //이게 될까?
+            console.log(num);       //나중에 삭제할것
+            board.answerCount = num;
+        }
+        result.update({});
         res.json(result);
     }
     catch(err){
@@ -19,7 +24,7 @@ router.route('/')
     }
 });
 
-router.route('/new')
+router.route(verifyToken, '/new')
 .post( verifyToken, async(req,res,next)=>{
     const user = await User.findOne({where : {userID : res.locals.user}});
     const { bbsTitle, bbsContent, hashTagContent} = req.body;
@@ -49,17 +54,38 @@ router.route('/new')
     }
 });
 
-router.route('/:id')
+router.route(verifyToken,'/:id')
 .get( async(req,res,next)=>{
 
     const boardID = req.params.id;
     try{
         const result = await Board.findOne({where : {id : boardID}});
-        const temp = result.bbsViews+1;
+        if(res.locals.user != result.boarder){          // 본인이 아니면 조회수를 늘려줌
+            const temp = result.bbsViews+1;
+            result.update({
+                bbsViews : temp,
+            }); 
+        }   
+
+        //이제 답변들 불러와야함
+        const answers = await result.getAnswers();
+
+        //각각의 댓글수들도 계산해야함
+        const count_board = await result.getBoardComments().count();
         result.update({
-            bbsViews : temp,
-        }); 
-        return res.json(result);
+            commentCount : count_board,
+        })
+
+        for( answer in answers){
+            const count_answer = answer.getAnswerComments().count();
+            answer.update({
+                commentCount : count_answer,
+            })
+        }
+
+        answers.update({});
+        result.update({});
+        return res.json(result + answers);
     }
     catch(err){
         console.error(err);

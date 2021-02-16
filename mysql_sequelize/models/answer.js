@@ -12,6 +12,11 @@ module.exports = class Answer extends Sequelize.Model{
                 allowNull: false,
                 defaultValue : 0,
             },
+            commentCount: {
+                type : Sequelize.INTEGER.UNSIGNED,
+                allowNull : false,
+                defaultValue : 0,
+            },
         },{
             sequelize,
             timestamps: true,

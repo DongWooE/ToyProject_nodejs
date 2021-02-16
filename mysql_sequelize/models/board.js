@@ -21,6 +21,16 @@ module.exports = class Board extends Sequelize.Model{
                 allowNull: false,
                 defaultValue : 0,
             },
+            answerCount: {
+                type : Sequelize.INTEGER.UNSIGNED,
+                allowNull : false,
+                defaultValue : 0,
+            },
+            commentCount: {
+                type : Sequelize.INTEGER.UNSIGNED,
+                allowNull : false,
+                defaultValue : 0,
+            },
             hashTagContent:{
                 type: Sequelize.STRING(40),
                 allowNull: true,
