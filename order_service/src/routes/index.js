@@ -1,8 +1,11 @@
-const {Router} = require('express');
-const router = Router();
-const v1Router = require('./api/v1');
+const express = require('express');
+const router = express.Router();
+const apiRouter = require('./api/v1');
 
-router.use('/v1', v1Router);
+router.get('/', (req,res) =>{
+    res.send('ok');
+});
 
+router.use('/api', apiRouter);
 
 module.exports = router;
