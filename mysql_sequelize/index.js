@@ -15,8 +15,10 @@ const cors = require('cors');
 dotenv.config();
 const authRouter = require('./routes/auth/auth');
 const boardRouter = require('./routes/board');
-const commentRouter = require('./routes/comment/board');
+const boardCommentRouter = require('./routes/comment/board');
+const answerCommentRouter = require('./routes/comment/answer');
 const searchRouter = require('./routes/search');
+const answerRouter = require('./routes/answer');
 
 app.set('port', process.env.PORT || 3001);
 app.use(morgan('dev'));
@@ -25,7 +27,7 @@ app.use(cors({origin:true, credentials : true}));
 app.use(express.urlencoded({extended: false}));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 //DB 연동부분
-sequelize.sync({force : true})
+sequelize.sync({force : false})
 .then(()=>{
     console.log("DB 연결 성공");
 })
@@ -53,10 +55,11 @@ sequelize.sync({force : true})
 
 app.use('/auth', authRouter);
 app.use('/boards', boardRouter);
-app.use('/comments', commentRouter);
+app.use('/comments/answers', answerCommentRouter);
+app.use('/comments/boards', boardCommentRouter);
+app.use('/answers', answerRouter);
 app.use('/search', searchRouter);
 
 app.listen(app.get('port'), ()=>{
     console.log(app.get('port'), '번 포트에서 대기 중');
 });
-

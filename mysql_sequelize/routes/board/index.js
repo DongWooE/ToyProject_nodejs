@@ -1,5 +1,5 @@
 const express = require('express');
-const { User, Board, Hashtag, Answer } = require('../../models');
+const { User, Board, Hashtag, Answer, BoardLike, BoardComment, AnswerComment } = require('../../models');
 const { verifyToken } = require('../auth/middleware');
 
 const router = express.Router();
@@ -10,13 +10,16 @@ router.route('/')
     try{
         const { limit, offset } = req.query;    // 페이징
         const temp = await Board.findAll({ limit, offset});       //페이징으로 나눠서 갖고 오기
-        for(board in result){
-            const num = await board.getAnswers().count();   //이게 될까?
-            console.log(num);       //나중에 삭제할것
-            board.answerCount = num;
+        for(let item in temp){
+            const count = await Board.count({
+                include: [{
+                    model: Answer,
+                    where : `${temp[item].dataValues.id}`
+                }]
+            })
+            temp[item].dataValues.answerCount = count;
         }
-        result.update({});
-        res.json(result);
+        res.json(temp);
     }
     catch(err){
         console.error(err);
@@ -24,7 +27,7 @@ router.route('/')
     }
 });
 
-router.route(verifyToken, '/new')
+router.route('/new')
 .post( verifyToken, async(req,res,next)=>{
     const user = await User.findOne({where : {userID : res.locals.user}});
     const { bbsTitle, bbsContent, hashTagContent} = req.body;
@@ -54,56 +57,32 @@ router.route(verifyToken, '/new')
     }
 });
 
-router.route(verifyToken,'/:id')
-.get( async(req,res,next)=>{
-
-    const boardID = req.params.id;
-    try{
-        const result = await Board.findOne({where : {id : boardID}});
-        if(res.locals.user != result.boarder){          // 본인이 아니면 조회수를 늘려줌
-            const temp = result.bbsViews+1;
-            result.update({
-                bbsViews : temp,
-            }); 
-        }   
-
-        //이제 답변들 불러와야함
-        const answers = await result.getAnswers();
-
-        //각각의 댓글수들도 계산해야함
-        const count_board = await result.getBoardComments().count();
-        result.update({
-            commentCount : count_board,
-        })
-
-        for( answer in answers){
-            const count_answer = answer.getAnswerComments().count();
-            answer.update({
-                commentCount : count_answer,
-            })
-        }
-
-        answers.update({});
-        result.update({});
-        return res.json(result + answers);
-    }
-    catch(err){
-        console.error(err);
-        next(err);
-    }
-})
-
-.post( async(req,res,next)=>{
+router.route('/:id')
+.post( verifyToken,async(req,res,next)=>{           //좋아요
     
-    const boardID = req.params.id;
     const { recommend } = req.body;
     try{
-        const result = await Board.findOne({where: {id : boardID}});
-        const temp = result.bbsReco + (+recommend);
-        result.update({
-            bbsReco : temp,
-        });
-        return res.json({state: "boardRecoChanged"});
+        const like = await BoardLike.findOne({where : { userID : `${res.locals.user}`}, boardID : `${req.params.id}`})
+        const board = await Board.findOne({where : {id : `${req.params.id}`}});
+        
+        if(!like){
+            const user = await User.findOne({ where : {userID : `${res.locals.user}`}});
+            const newLike = await BoardLike.create({
+                isAdd : true,
+            })
+
+            user.addBoardLikes(newLike);
+            board.addBoardLikes(newLike);
+            const exReco = board.bbsReco;
+            board.bbsReco = exReco + (+recommend);
+            res.json({state : "LikedSuccess", message : "좋아요 또는 싫어요 작업 완료"});
+        }
+        else{
+            if(like.isAdd){
+                res.json({ state : "alreadyLiked", message : "이미 좋아요 또는 싫어요를 표시함"});
+            }
+
+        }
     }
     catch(err){
         console.error(err);
@@ -131,6 +110,7 @@ router.route(verifyToken,'/:id')
 
 .delete( async(req,res,next)=>{
     try{
+
         await Board.destroy({
             where: {id: req.params.id},
         })
@@ -142,5 +122,48 @@ router.route(verifyToken,'/:id')
     }
 
 });
+
+router.get('/:userID/:postID', async(req,res,next)=>{
+
+    const boardID = req.params.postID;
+    try{
+        const result = await Board.findOne({where : {id : boardID}});
+        if(req.params.userID != result.boarder){          // 본인이 아니면 조회수를 늘려줌
+            const temp = result.bbsViews+1;
+            result.update({
+                bbsViews : temp,
+            }); 
+        }   
+
+        //이제 답변들 불러와야함
+        const answers = await result.getAnswers();
+        
+        //각각의 댓글수들도 계산해야함
+        const count = await Board.count({
+            include : [{
+                model : BoardComment,
+                where : { id : `${req.params.id}`}
+            }]
+        });
+        await result.update({
+            commentCount : count,
+        })
+            for( let item in answers){
+                const count  = await Answer.count({
+                    include : [{
+                        model : AnswerComment,
+                        where : { id : `${answers[item].dataValues.id}`}
+                    }]
+                })
+                answers[item].dataValues.commentCount = count;
+            }
+        
+        return res.json({board : result , answers : answers});
+    }
+    catch(err){
+        console.error(err);
+        next(err);
+    }
+})
 
 module.exports = router;

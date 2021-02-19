@@ -9,12 +9,12 @@ router.post('/:id/new',verifyToken, async(req,res,next) =>{      //새로운 답
     const user = await User.findOne({ where : { id : `${res.locals.user}`} });
     const board = await Board.findOne({ where : { id : `${req.params.id}`}});
 
-    const answer =  { answerContent } = req.body;
-    await Answer.create({
+    const { answerContent } = req.body;
+    const answer = await Answer.create({
         answerContent,
     });
-    await user.addAnswer(answer);
-    await board.addAnswer(board);
+    await user.addAnswers(answer);
+    await board.addAnswers(board);
     
     return res.json({ key : `${answer.id}`,state: "answerSuccess", message : "답변이 잘 입력됨"});      //여기서 key값을 잘 가지고 있어야함
     }catch(error){
@@ -26,20 +26,19 @@ router.post('/:id/new',verifyToken, async(req,res,next) =>{      //새로운 답
 
 router.route('/:key', verifyToken)        //:key값으로 comment의 아이디값을 받는다
 .post(async(req,res,next) =>{
-    const {recommend} = req.body;
+    const { recommend } = req.body;
     try{
     const like = await AnswerLike.findOne({ where: { userID : `${res.locals.user}`, answerID : `${req.params.key}`}});
     const answer =await Answer.findOne({ where : { id : `${req.params.key}`} }); 
 
     if(!like){      //만약 like table이 존재하지않다면 새로 만들어준다
         const user = await User.findOne({ where : { userID : `${res.locals.user}`}});
-
         const newLike = await AnswerLike.create({
             isAdd : true,
-        })
+    })
         
-        user.addAnswerLike(newLike);
-        answer.addAnswerLike(newLike);
+        user.addAnswerLikes(newLike);
+        answer.addAnswerLikes(newLike);
         const exReco = answer.answerReco;           //좋아요 또는 싫어요를 표시함
         answer.answerReco = exReco + (+recommend); 
         res.json({ state : "LikedSuccess", message : "좋아요 또는 싫어요 작업 완료"});
