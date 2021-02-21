@@ -1,92 +1,12 @@
 const express = require('express');
-const { User, Board, Answer, AnswerLike } = require('../../models');
-const { verifyToken } = require('../auth/middleware');
-
+const {verifyToken} = require('../middleware/verify');
 const router = express.Router();
+const {postAnswer,patchAnswer,deleteAnswer,postReco} = require('../../controller/answer.router');
 
-router.post('/:id/new',verifyToken, async(req,res,next) =>{      //새로운 답변을 추가
-    try{
-    const user = await User.findOne({ where : { userId : `${res.locals.user}`} });
-    const board = await Board.findOne({ where : { id : `${req.params.id}`}});
-
-    const { answerContent } = req.body;
-    const answer = await Answer.create({
-        answerContent,
-    });
-    await user.addAnswers(answer);
-    await board.addAnswers(answer);
-    
-    return res.json({ key : `${answer.id}`,state: "answerSuccess", message : "답변이 잘 입력됨"});      //여기서 key값을 잘 가지고 있어야함
-    }catch(error){
-        console.error(error);
-        next(error);
-    }
-});
-
-
-router.route('/:key', verifyToken)        //:key값으로 comment의 아이디값을 받는다
-.post(async(req,res,next) =>{
-    const { recommend } = req.body;
-    try{
-    const like = await AnswerLike.findOne({ where: { userID : `${res.locals.user}`, answerID : `${req.params.key}`}});
-    const answer =await Answer.findOne({ where : { id : `${req.params.key}`} });
-    console.log(`answer는 이거다${answer}`);
-    if(!answer) res.json({message : "answer is not existed"});
-    if(!like){      //만약 like table이 존재하지않다면 새로 만들어준다
-        const user = await User.findOne({ where : { userID : `${res.locals.user}`}});
-        const newLike = await AnswerLike.create({
-            isAdd : true,
-        })
-        user.addAnswerLikes(newLike);
-        answer.addAnswerLikes(newLike);
-        const exReco = answer.answerReco;           //좋아요 또는 싫어요를 표시함
-        answer.answerReco = exReco + (+recommend); 
-        res.json({ state : "LikedSuccess", message : "좋아요 또는 싫어요 작업 완료"});
-    } 
-    else{
-        if(like.isAdd){        //만약 기존에 like를 찍었다면
-            res.json({ state : "alreadyLiked", message: "이미 좋아요 또는 싫어요를 표시함"});
-        }
-    }
-      
-    }catch(error){
-        console.error(error);
-        next(error);
-    }
-})
-.patch(async(req,res,next) =>{
-    try{
-        const { answerContent } = req.body;
-        const result = await Answer.findOne({ id : `${req.params.key}`});
-        result.update({
-            answerContent,
-        });
-        res.json({ state : "updateDone", message : " 업데이트 완료 "});
-
-    }catch(error){
-        console.error(error);
-        next(error);
-    }
-
-})
-.delete(async(req,res,next) =>{
-    try{
-        const like = await AnswerLike.findAll({ where : { answerID :`${req.params.key}`}});
-        const comment = await AnswerComment.findAll({ where : {answerID : `${req.params.key}`}});
-        const answer = await Answer.findOne({ where : {id : `${req.params.key}`}});
-        
-        answer.removeAnswerComments(comment);
-        answer.removeAnswerLikes(like);
-
-        res.json({state : "destroydone", message : "삭제완료" });
-
-    }catch(error){
-        console.error(error);
-        next(error);
-    }
-
-
-});
-
+router.post('/:id/new',verifyToken, postAnswer);        //새로운 답변을 추가
+router.route('/:key', verifyToken)                      
+.post(postReco)                                         //추천수 post
+.patch(patchAnswer)                                     //답변 변경
+.delete(deleteAnswer);                                  //답변 삭제
 
 module.exports = router;

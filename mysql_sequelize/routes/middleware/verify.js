@@ -3,24 +3,6 @@
 
 const jwt = require('jsonwebtoken');
 
-
-// exports.isLoggedIn = (req, res, next)=>{
-//     if(req.isAuthenticated()){
-//         next();
-//     }
-//     else{
-//         return res.json({state: "needLogin"});
-//     }    
-// }
-
-// exports.isNotLoggedIn = (req, res, next) =>{
-//     if(!req.isAuthenticated()){
-//         next();
-//     }else{
-//         return res.json({state: "needLogout"});
-//     }
-// }
-
 exports.verifyToken = (req, res, next) =>{
     try{
         req.decoded = jwt.verify(req.cookies.user, process.env.JWT_SECRET);
@@ -38,3 +20,20 @@ exports.verifyToken = (req, res, next) =>{
         });
     }
 }
+
+// exports.isLoggedIn = (req, res, next)=>{
+//     if(req.isAuthenticated()){
+//         next();
+//     }
+//     else{
+//         return res.json({state: "needLogin"});
+//     }    
+// }
+
+// exports.isNotLoggedIn = (req, res, next) =>{
+//     if(!req.isAuthenticated()){
+//         next();
+//     }else{
+//         return res.json({state: "needLogout"});
+//     }
+// }
