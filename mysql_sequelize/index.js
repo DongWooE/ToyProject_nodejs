@@ -7,18 +7,13 @@ const User = require('./models/user.js');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const router = require('./routes');
 //const passport = require('passport');
 //const session = require('express-session');
 //const passportConfig = require('./passport');       //index.js와 passport/index.js와 연결해준다
 
 //passportConfig();
 dotenv.config();
-const authRouter = require('./routes/auth/auth');
-const boardRouter = require('./routes/board');
-const boardCommentRouter = require('./routes/comment/board');
-const answerCommentRouter = require('./routes/comment/answer');
-const searchRouter = require('./routes/search');
-const answerRouter = require('./routes/answer');
 
 app.set('port', process.env.PORT || 3001);
 app.use(morgan('dev'));
@@ -52,13 +47,13 @@ sequelize.sync({force : false})
 // app.use(passport.initialize());     //request에 passport 설정을 심고
 // app.use(passport.session());        //request.session 객체에 passport 정보를 저장
 
+app.use('/', router);
 
-app.use('/auth', authRouter);
-app.use('/boards', boardRouter);
-app.use('/comments/answers', answerCommentRouter);
-app.use('/comments/boards', boardCommentRouter);
-app.use('/answers', answerRouter);
-app.use('/search', searchRouter);
+app.use((req,res,next) => {
+    const error = new Error(`${req.method} ${req.url} router not existed`);
+    error.status = 404;
+    next(error);
+});
 
 app.listen(app.get('port'), ()=>{
     console.log(app.get('port'), '번 포트에서 대기 중');

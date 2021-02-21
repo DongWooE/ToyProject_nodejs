@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/:id/new',verifyToken, async(req,res,next) =>{      //새로운 답변을 추가
     try{
-    const user = await User.findOne({ where : { id : `${res.locals.user}`} });
+    const user = await User.findOne({ where : { userId : `${res.locals.user}`} });
     const board = await Board.findOne({ where : { id : `${req.params.id}`}});
 
     const { answerContent } = req.body;
@@ -14,7 +14,7 @@ router.post('/:id/new',verifyToken, async(req,res,next) =>{      //새로운 답
         answerContent,
     });
     await user.addAnswers(answer);
-    await board.addAnswers(board);
+    await board.addAnswers(answer);
     
     return res.json({ key : `${answer.id}`,state: "answerSuccess", message : "답변이 잘 입력됨"});      //여기서 key값을 잘 가지고 있어야함
     }catch(error){
@@ -29,14 +29,14 @@ router.route('/:key', verifyToken)        //:key값으로 comment의 아이디�
     const { recommend } = req.body;
     try{
     const like = await AnswerLike.findOne({ where: { userID : `${res.locals.user}`, answerID : `${req.params.key}`}});
-    const answer =await Answer.findOne({ where : { id : `${req.params.key}`} }); 
-
+    const answer =await Answer.findOne({ where : { id : `${req.params.key}`} });
+    console.log(`answer는 이거다${answer}`);
+    if(!answer) res.json({message : "answer is not existed"});
     if(!like){      //만약 like table이 존재하지않다면 새로 만들어준다
         const user = await User.findOne({ where : { userID : `${res.locals.user}`}});
         const newLike = await AnswerLike.create({
             isAdd : true,
-    })
-        
+        })
         user.addAnswerLikes(newLike);
         answer.addAnswerLikes(newLike);
         const exReco = answer.answerReco;           //좋아요 또는 싫어요를 표시함

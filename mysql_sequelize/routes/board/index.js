@@ -14,7 +14,7 @@ router.route('/')
             const count = await Board.count({
                 include: [{
                     model: Answer,
-                    where : `${temp[item].dataValues.id}`
+                    where : { id : `${temp[item].dataValues.id}`}
                 }]
             })
             temp[item].dataValues.answerCount = count;
@@ -27,9 +27,9 @@ router.route('/')
     }
 });
 
-router.route('/new')
-.post( verifyToken, async(req,res,next)=>{
-    const user = await User.findOne({where : {userID : res.locals.user}});
+router.route('/new/:id')
+.post(async(req,res,next)=>{
+    const user = await User.findOne({where : {userID : `${req.params.id}`}});
     const { bbsTitle, bbsContent, hashTagContent} = req.body;
     try{
         const board = await Board.create({
@@ -128,6 +128,7 @@ router.get('/:userID/:postID', async(req,res,next)=>{
     const boardID = req.params.postID;
     try{
         const result = await Board.findOne({where : {id : boardID}});
+        console.log(result);
         if(req.params.userID != result.boarder){          // 본인이 아니면 조회수를 늘려줌
             const temp = result.bbsViews+1;
             result.update({
