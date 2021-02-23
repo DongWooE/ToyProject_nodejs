@@ -15,7 +15,7 @@ const getBoards = (async(req,res,next)=>{
 
 const postBoard = (async(req,res,next)=>{
     try{
-        const user = await User.findOne({where : {userID : req.params.id}});
+        const user = await User.findOne({where : {userID : req.params.userID}});
         if(!user) res.json({state: "notExisted"});
         const { bbsTitle, bbsContent, hashTagContent} = req.body;
         const board = await Board.create({
@@ -48,7 +48,6 @@ const postReco = (async(req,res,next)=>{           //좋아요
     try{
         const like = await BoardLike.findOne({where : { userID : `${res.locals.user}`}, boardID : `${req.params.id}`})
         const board = await Board.findOne({where : {id : `${req.params.id}`}});
-        
         if(!like){
             const user = await User.findOne({ where : {userID : `${res.locals.user}`}});
             const newLike = await BoardLike.create({
@@ -75,14 +74,20 @@ const postReco = (async(req,res,next)=>{           //좋아요
 
 const putBoard = (async(req,res,next)=>{
     const {bbsTitle, bbsContent, hashTagContent} = req.body;
+    const { userID, postID } = req.params; 
     try{
-        await Board.update({
+        const board = await Board.findOne({ where : { id : postID }});
+        if(!board) res.json({ state : "notExisted"});
+        if(board.boarder != userID) res.json({ state : "notPermissioned"});
+        await board.update({
             bbsTitle,
             bbsContent,
             hashTagContent,
         },{
-            where : {id : req.params.id},
+            where : {id : postID},
         })
+        const user = await User.findOne({ where : { userID}});
+        user.setBoards(board);
         return res.json({state: "boardChanged"});
     }
     catch(err){
@@ -92,10 +97,12 @@ const putBoard = (async(req,res,next)=>{
 })
 
 const deleteBoard = (async(req,res,next)=>{
-    const number = req.params.id;
+    const { userID, postID } = req.params;
     try{
-        const board = await Board.findOne({ where : { id : number}});
-        const answer = await Answer.findOne({ where : {boardID : number}})
+        const board = await Board.findOne({ where : { id : postID}});
+        if(board.boarder != userID) res.json({ state : "notPermissioned" });
+        const user = await User.findOne({ where : {userID}});
+        const answer = await Answer.findOne({ where : {boardID : postID}})
         if(answer){
         await answer.removeAnswerComments();
         await answer.removeAnswerLikes();
@@ -103,6 +110,7 @@ const deleteBoard = (async(req,res,next)=>{
         board.removeAnswers();
         board.removeBoardComments();
         board.removeBoardLikes();
+        user.removeBoard(board);
         board.destroy();
         return res.json({state: "boardDeleted"});
     }
