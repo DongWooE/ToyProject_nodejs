@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const {verifyToken} = require('../middleware/verify');
-const {getBoard, getBoards, postBoard, patchBoard, deleteBoard, postReco} = require('../../controller/board.router')
+const {getBoard, getBoards, postBoard, putBoard, deleteBoard, postReco} = require('../../controller/board.router')
 
 router.get('/', getBoards);
-router.post('/', postBoard);
 router.route('/:id')
-.get(getBoard)          // 특정한 board 값을 받아온다
-.patch(patchBoard)      // board 수정
-.delete(deleteBoard);   // board 삭제
+.get(getBoard)          // 특정한 board 값을 받아온다   ( id : boardID)
+.post(postBoard)        // board 생성   ( id : userID)
+.put(putBoard)          // board 수정   ( id : boardID)
+.delete(deleteBoard);   // board 삭제   ( id : boardID)
 
 module.exports = router;

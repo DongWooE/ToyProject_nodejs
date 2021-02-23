@@ -3,18 +3,9 @@ const { User, Board, Hashtag, Answer, BoardLike, BoardComment, AnswerComment } =
 const getBoards = (async(req,res,next)=>{
     try{
         const { limit, offset } = req.query;    // 페이징
-        const temp = await Board.findAll({ limit, offset});       //페이징으로 나눠서 갖고 오기
-        for(let item in temp){
-            const count = await Board.count({
-                include: [{
-                    model: Answer,
-                    where : { id : temp[item].dataValues.id}
-                }]
-            })
-            console.log(` ${item}번쨰 : ${temp[item].dataValues.id}`)
-            console.log(` count : ${count}`);
-        }
-        res.json(temp);
+        const { count, rows} = await Board.findAndCountAll({ limit, offset});       //페이징으로 나눠서 갖고 오기
+        if(count == 0) res.json({ state : "Empty"});   
+        res.json(rows);
     }
     catch(err){
         console.error(err);
@@ -23,9 +14,10 @@ const getBoards = (async(req,res,next)=>{
 });
 
 const postBoard = (async(req,res,next)=>{
-    const user = await User.findOne({where : {userID : res.locals.user}});
-    const { bbsTitle, bbsContent, hashTagContent} = req.body;
     try{
+        const user = await User.findOne({where : {userID : req.params.id}});
+        if(!user) res.json({state: "notExisted"});
+        const { bbsTitle, bbsContent, hashTagContent} = req.body;
         const board = await Board.create({
             bbsTitle,
             bbsContent,
@@ -52,7 +44,6 @@ const postBoard = (async(req,res,next)=>{
 });
 
 const postReco = (async(req,res,next)=>{           //좋아요
-    
     const { recommend } = req.body;
     try{
         const like = await BoardLike.findOne({where : { userID : `${res.locals.user}`}, boardID : `${req.params.id}`})
@@ -80,15 +71,15 @@ const postReco = (async(req,res,next)=>{           //좋아요
         console.error(err);
         next(err);
     } 
-
 })
 
-const patchBoard = (async(req,res,next)=>{
-    const {bbsTitle, bbsContent} = req.body;
+const putBoard = (async(req,res,next)=>{
+    const {bbsTitle, bbsContent, hashTagContent} = req.body;
     try{
         await Board.update({
             bbsTitle,
             bbsContent,
+            hashTagContent,
         },{
             where : {id : req.params.id},
         })
@@ -101,10 +92,18 @@ const patchBoard = (async(req,res,next)=>{
 })
 
 const deleteBoard = (async(req,res,next)=>{
+    const number = req.params.id;
     try{
-        await Board.destroy({
-            where: {id: req.params.id},
-        })
+        const board = await Board.findOne({ where : { id : number}});
+        const answer = await Answer.findOne({ where : {boardID : number}})
+        if(answer){
+        await answer.removeAnswerComments();
+        await answer.removeAnswerLikes();
+        }
+        board.removeAnswers();
+        board.removeBoardComments();
+        board.removeBoardLikes();
+        board.destroy();
         return res.json({state: "boardDeleted"});
     }
     catch(err){
@@ -121,30 +120,7 @@ const getBoard = (async(req,res,next)=>{
         result.update({
             bbsViews : temp,
         }); 
-
-        //이제 답변들 불러와야함
         const answers = await result.getAnswers();
-        
-        //각각의 댓글수들도 계산해야함
-        const count = await Board.count({
-            include : [{
-                model : BoardComment,
-                where : { id : `${req.params.id}`}
-            }]
-        });
-        await result.update({
-            commentCount : count,
-        })
-            for( let item in answers){
-                const count  = await Answer.count({
-                    include : [{
-                        model : AnswerComment,
-                        where : { id : `${answers[item].dataValues.id}`}
-                    }]
-                })
-                answers[item].dataValues.commentCount = count;
-            }
-        
         return res.json({board : result , answers : answers});
     }
     catch(err){
@@ -153,4 +129,4 @@ const getBoard = (async(req,res,next)=>{
     }
 })
 
-module.exports = {getBoard, getBoards, postReco, postBoard, patchBoard, deleteBoard};
+module.exports = {getBoard, getBoards, postReco, postBoard, putBoard, deleteBoard};
