@@ -30,6 +30,18 @@ module.exports = class Answer extends Sequelize.Model{
     
     }
 
+    static hookFunction(db){
+        db.Answer.addHook('afterCreate', async(answer, options) =>{
+            const board = await db.Board.findOne({ where : { id : answer.boardID}});
+            let answerCount = board.answerCount +1;
+            await board.update({ answerCount });
+        });
+        db.Answer.addHook('beforeDestroy', async(answer, options) =>{
+            const board = await db.Board.findOne({ where : { id : answer.boardID}});
+            let answerCount = board.answerCount -1;
+            await board.update({ answerCount });
+        })
+    }
     
     static associate(db) {
         db.Answer.belongsTo(db.User, {foreignKey: 'answerer', targetKey: 'userID'});
@@ -37,6 +49,5 @@ module.exports = class Answer extends Sequelize.Model{
 
         db.Answer.hasMany(db.AnswerComment, {foreignKey : 'answerID', sourceKey: 'id'});
         db.Answer.hasMany(db.AnswerLike, {foreignKey : 'answerID', sourceKey: 'id'});
-
       }
 }

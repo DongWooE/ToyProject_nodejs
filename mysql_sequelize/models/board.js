@@ -1,7 +1,4 @@
 const Sequelize = require('sequelize');
-const{Op} = require('sequelize');
-
-const { User } = require('.');
 
 module.exports = class Board extends Sequelize.Model{
     static init(sequelize){
@@ -49,19 +46,6 @@ module.exports = class Board extends Sequelize.Model{
             collate: 'utf8_general_ci',
        });    
     
-    }
-    static hookFunction(db){
-        let count , id ;
-        db.Board.addHook('beforeValidate', async(board, options) =>{
-            const answerCount =  await db.Answer.count( 
-                {   
-                    where : { boardID : board.id},
-                }
-            )
-            count = answerCount;
-            id = board.id;
-        });
-        db.Board.update({ where : { id }, answerCount: count})
     }
     
     static associate(db) {

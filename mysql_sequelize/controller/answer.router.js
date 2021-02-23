@@ -1,15 +1,20 @@
 const { User, Board, Answer, AnswerLike } = require('../models');
 
 const postAnswer =  (async(req,res,next) =>{      //새로운 답변을 추가
-    try{
-    const user = await User.findOne({where : { userId : `${res.locals.user}`} });
-    const board = await Board.findOne({where : { id : `${req.params.id}`}});
+    const { userID, postID } = req.params;
     const { answerContent } = req.body;
+    try{
+    const user = await User.findByPk(userID);
+    if(!user) res.status(401);
+    const board = await Board.findByPk(postID);
+    if(!board) res.status(401);
     const answer = await Answer.create({
         answerContent,
+        answerer : userID,
+        boardID : postID,
     });
-    await user.addAnswers(answer);
-    await board.addAnswers(answer);
+    await user.addAnswer(answer);
+    await board.addAnswer(answer);
     return res.json({ key : `${answer.id}`,state: "answerSuccess", message : "답변이 잘 입력됨"});      //여기서 key값을 잘 가지고 있어야함
     }catch(error){
         console.error(error);
@@ -45,14 +50,21 @@ const postReco = (async(req,res,next) =>{
     }
 })
 
-const patchAnswer = (async(req,res,next) =>{
+const putAnswer = (async(req,res,next) =>{
+    const { userID, postID, answerID } = req.params;
+    const { answerContent } = req.body;
     try{
-        const { answerContent } = req.body;
-        const result = await Answer.findOne({ id : `${req.params.key}`});
-        result.update({
+        const answer = await Answer.findByPk(answerID);
+        if(!answer) res.json({ state : "notExisted"});
+        if(answer.answerer != userID) res.json({ state : "notPermissioned"});
+        await answer.update({
             answerContent,
-        });
-        res.json({ state : "updateDone", message : " 업데이트 완료 "});
+        })
+        const user = await User.findByPk(userID);
+        const board = await Board.findByPk(postID);
+        user.setAnswers(answer);
+        board.setAnswers(answer);
+        res.json({ state : "answerChanged", message : " 업데이트 완료 "});
     }catch(error){
         console.error(error);
         next(error);
@@ -60,12 +72,18 @@ const patchAnswer = (async(req,res,next) =>{
 })
 
 const deleteAnswer = (async(req,res,next) =>{
+    const { userID, postID, answerID } = req.params;
     try{
-        const like = await AnswerLike.findAll({ where : { answerID :`${req.params.key}`}});
-        const comment = await AnswerComment.findAll({ where : {answerID : `${req.params.key}`}});
-        const answer = await Answer.findOne({ where : {id : `${req.params.key}`}});
-        answer.removeAnswerComments(comment);
-        answer.removeAnswerLikes(like);
+        const answer = await Answer.findByPk(answerID);
+        if(!answer) res.json({ state : "notExisted"});
+        if(answer.answerer != userID) res.json({ state : "notPermissioned"});
+        answer.removeAnswerComments();
+        answer.removeAnswerLikes();
+        const board = await Board.findByPk(postID)
+        const user = await User.findByPk(userID)
+        board.removeAnswer(answer);
+        user.removeAnswer(answer);
+        answer.destroy();
         res.json({state : "destroydone", message : "삭제완료" });
     }catch(error){
         console.error(error);
@@ -74,4 +92,4 @@ const deleteAnswer = (async(req,res,next) =>{
 });
 
 
-module.exports = { postAnswer, patchAnswer, deleteAnswer, postReco};
+module.exports = { postAnswer, putAnswer, deleteAnswer, postReco};

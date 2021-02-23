@@ -83,8 +83,6 @@ const putBoard = (async(req,res,next)=>{
             bbsTitle,
             bbsContent,
             hashTagContent,
-        },{
-            where : {id : postID},
         })
         const user = await User.findOne({ where : { userID}});
         user.setBoards(board);
