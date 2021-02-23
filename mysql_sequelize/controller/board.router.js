@@ -8,10 +8,11 @@ const getBoards = (async(req,res,next)=>{
             const count = await Board.count({
                 include: [{
                     model: Answer,
-                    where : { id : `${temp[item].dataValues.id}`}
+                    where : { id : temp[item].dataValues.id}
                 }]
             })
-            temp[item].dataValues.answerCount = count;
+            console.log(` ${item}번쨰 : ${temp[item].dataValues.id}`)
+            console.log(` count : ${count}`);
         }
         res.json(temp);
     }
@@ -22,7 +23,7 @@ const getBoards = (async(req,res,next)=>{
 });
 
 const postBoard = (async(req,res,next)=>{
-    const user = await User.findOne({where : {userID : `${req.params.id}`}});
+    const user = await User.findOne({where : {userID : res.locals.user}});
     const { bbsTitle, bbsContent, hashTagContent} = req.body;
     try{
         const board = await Board.create({
@@ -42,7 +43,7 @@ const postBoard = (async(req,res,next)=>{
             await board.addHashtags(result.map(r => r[0]));
         }
         await user.addBoards(board);
-            return res.json({state : "boardSuccess"});
+        return res.json({state : "boardSuccess"});
         }
     catch(err){
         console.error(err);
@@ -62,7 +63,6 @@ const postReco = (async(req,res,next)=>{           //좋아요
             const newLike = await BoardLike.create({
                 isAdd : true,
             })
-
             user.addBoardLikes(newLike);
             board.addBoardLikes(newLike);
             const exReco = board.bbsReco;
@@ -102,7 +102,6 @@ const patchBoard = (async(req,res,next)=>{
 
 const deleteBoard = (async(req,res,next)=>{
     try{
-
         await Board.destroy({
             where: {id: req.params.id},
         })
@@ -115,16 +114,13 @@ const deleteBoard = (async(req,res,next)=>{
 });
 
 const getBoard = (async(req,res,next)=>{
-    const boardID = req.params.postID;
     try{
+        const boardID = req.params.id;
         const result = await Board.findOne({where : {id : boardID}});
-        console.log(result);
-        if(req.params.userID != result.boarder){          // 본인이 아니면 조회수를 늘려줌
-            const temp = result.bbsViews+1;
-            result.update({
-                bbsViews : temp,
-            }); 
-        }   
+        const temp = result.bbsViews+1;
+        result.update({
+            bbsViews : temp,
+        }); 
 
         //이제 답변들 불러와야함
         const answers = await result.getAnswers();

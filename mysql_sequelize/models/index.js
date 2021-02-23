@@ -50,5 +50,6 @@ AnswerComment.associate(db);
 BoardLike.associate(db);
 AnswerLike.associate(db);
 
+Board.hookFunction(db);
 
 module.exports = db;

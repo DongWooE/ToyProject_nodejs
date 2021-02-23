@@ -32,7 +32,6 @@ sequelize.sync({force : false})
 });
 
 
-
 // app.use(session({       //세션 관리용 미들웨어
 //     resave: false,                              //요청이 올때 세션에 수정 사항이 생기지않더라도 세션을 다시 저장할지 설정하는 것
 //     saveUninitialized: false,                   //세션에 저장할 내역이 없더라도 세션을 다시 생성할지 설정하는 것

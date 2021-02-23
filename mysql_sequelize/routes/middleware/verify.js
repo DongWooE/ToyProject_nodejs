@@ -11,11 +11,11 @@ exports.verifyToken = (req, res, next) =>{
     }
     catch(error){
         if(error.name == "TokenExpiredError"){
-            return res.status(410).json({
+            return res.status(205).json({
                 state: "tokenExpired"
             });
         }
-        return res.status(401).json({
+        return res.status(206).json({
             state: "invalidToken"
         });
     }

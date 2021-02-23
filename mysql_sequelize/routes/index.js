@@ -15,4 +15,11 @@ router.use('/comments/boards', boardCommentRouter);
 router.use('/answers', answerRouter);
 router.use('/search', searchRouter);
 
+//테스트 코드
+const {verifyToken } = require('./middleware/verify')
+
+router.use('/test', verifyToken,(req,res,next)=>{
+    console.log(`이 사람의 이름은 : ${res.locals.user}입니다`);
+})
+
 module.exports = router;

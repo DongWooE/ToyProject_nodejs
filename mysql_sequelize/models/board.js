@@ -1,4 +1,7 @@
 const Sequelize = require('sequelize');
+const{Op} = require('sequelize');
+
+const { User } = require('.');
 
 module.exports = class Board extends Sequelize.Model{
     static init(sequelize){
@@ -47,7 +50,19 @@ module.exports = class Board extends Sequelize.Model{
        });    
     
     }
-
+    static hookFunction(db){
+        let count , id ;
+        db.Board.addHook('beforeValidate', async(board, options) =>{
+            const answerCount =  await db.Answer.count( 
+                {   
+                    where : { boardID : board.id},
+                }
+            )
+            count = answerCount;
+            id = board.id;
+        });
+        db.Board.update({ where : { id }, answerCount: count})
+    }
     
     static associate(db) {
         db.Board.belongsTo(db.User, {foreignKey: 'boarder', targetKey: 'userID'});
@@ -56,6 +71,5 @@ module.exports = class Board extends Sequelize.Model{
         db.Board.hasMany(db.Answer, {foreignKey: 'boardID', sourceKey : 'id'});
         db.Board.hasMany(db.BoardComment, {foreignKey: 'boardID', sourceKey : 'id'});
         db.Board.hasMany(db.BoardLike, {foreignKey: 'boardID', sourceKey : 'id'});
-        
       }
 }
