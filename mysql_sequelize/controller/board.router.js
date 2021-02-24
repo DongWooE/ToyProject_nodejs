@@ -43,35 +43,6 @@ const postBoard = (async(req,res,next)=>{
     }
 });
 
-const postReco = (async(req,res,next)=>{           //좋아요
-    const { recommend } = req.body;
-    try{
-        const like = await BoardLike.findOne({where : { userID : `${res.locals.user}`}, boardID : `${req.params.id}`})
-        const board = await Board.findOne({where : {id : `${req.params.id}`}});
-        if(!like){
-            const user = await User.findOne({ where : {userID : `${res.locals.user}`}});
-            const newLike = await BoardLike.create({
-                isAdd : true,
-            })
-            user.addBoardLikes(newLike);
-            board.addBoardLikes(newLike);
-            const exReco = board.bbsReco;
-            board.bbsReco = exReco + (+recommend);
-            res.json({state : "LikedSuccess", message : "좋아요 또는 싫어요 작업 완료"});
-        }
-        else{
-            if(like.isAdd){
-                res.json({ state : "alreadyLiked", message : "이미 좋아요 또는 싫어요를 표시함"});
-            }
-
-        }
-    }
-    catch(err){
-        console.error(err);
-        next(err);
-    } 
-})
-
 const putBoard = (async(req,res,next)=>{
     const {bbsTitle, bbsContent, hashTagContent} = req.body;
     const { userID, postID } = req.params; 
@@ -119,9 +90,9 @@ const deleteBoard = (async(req,res,next)=>{
 });
 
 const getBoard = (async(req,res,next)=>{
+    const { postID, userID } = req.params;
     try{
-        const boardID = req.params.id;
-        const result = await Board.findOne({where : {id : boardID}});
+        const result = await Board.findOne({where : {id : postID}});
         const temp = result.bbsViews+1;
         result.update({
             bbsViews : temp,
@@ -135,4 +106,4 @@ const getBoard = (async(req,res,next)=>{
     }
 })
 
-module.exports = {getBoard, getBoards, postReco, postBoard, putBoard, deleteBoard};
+module.exports = {getBoard, getBoards, postBoard, putBoard, deleteBoard};

@@ -5,7 +5,6 @@ const {postAnswer,putAnswer,deleteAnswer,postReco} = require('../../controller/a
 
 router.post('/:userID/:postID' ,postAnswer);        //새로운 답변을 생성
 router.route('/:userID/:postID/:answerID')                      
-.post(postAnswer)                                       // 새로운 답변 생성 ( id : userID)
 .put(putAnswer)                                         //답변 변경
 .delete(deleteAnswer);                                  //답변 삭제
 

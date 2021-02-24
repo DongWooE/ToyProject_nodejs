@@ -2,7 +2,7 @@ const {User} = require('../models');
 const Hashtag = require('../models/hashtag');
 
 const getHashTages = (async( req, res, next)=>{
-    const query = req.query.hashtag;
+    const { hashtag : query, limit, offset} = req.query;
     if(!query){
         return res.json('queryNotExisted');
     }
@@ -10,7 +10,7 @@ const getHashTages = (async( req, res, next)=>{
         const hashtag = await Hashtag.findOne({where : {Content: query}});
         let posts =[];
         if(hashtag){
-            posts = await hashtag.getBoards({include: [{ model : User, attributes: ['userID']}]});
+            posts = await hashtag.findAll({include:});
         }
         return res.json(posts);
 
