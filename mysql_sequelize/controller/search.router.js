@@ -9,7 +9,7 @@ const getBoards = (async( req, res, next )=>{
         return res.json('queryNotExisted');
     }
     try{
-        const hashtag = await Hashtag.findOne({where : {title : query}});
+        const hashtag = await Hashtag.findOne({where : {Content : query}});
         let posts =[];
         if(hashtag){
             posts = await hashtag.getBoards();

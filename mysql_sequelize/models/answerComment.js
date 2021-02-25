@@ -20,6 +20,18 @@ module.exports = class AnswerComment extends Sequelize.Model{
     
     }
 
+    static hookFunction(db){
+        db.AnswerComment.addHook('afterCreate', async(comment, options) =>{
+            const answer = await db.Answer.findByPk(comment.answerID);
+            let commentCount = answer.answerCount +1;
+            await answer.update({ commentCount });
+        });
+        db.AnswerComment.addHook('beforeDestroy', async(comment, options) =>{
+            const answer = await db.Answer.findByPk(comment.answerID);
+            let commentCount = answer.answerCount -1;
+            await answer.update({ commentCount });
+        })
+    }
     
     static associate(db) {
         db.AnswerComment.belongsTo(db.User, {foreignKey: 'answerCommenter', targetKey: 'userID'})

@@ -21,7 +21,6 @@ module.exports = class AnswerLike extends Sequelize.Model{
     
     }
 
-    
     static associate(db) {
         db.AnswerLike.belongsTo(db.User, {foreignKey: 'userID', targetKey: 'userID'})
         db.AnswerLike.belongsTo(db.Answer, {foreignKey: 'answerID', targetKey: 'id'});
