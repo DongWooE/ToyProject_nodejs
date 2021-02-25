@@ -1,9 +1,11 @@
 const { User, Answer, AnswerComment } = require('../models');
+const { findByPk } = require('../models/user');
 
 const getComments = (async(req,res,next) =>{
+    const { userID, answerID } = req.params;
     try{
         const { limit , offset } = req.query;
-        const { count , rows } = await AnswerComment.findAndCountAll({ where : {answerID : `${req.params.id}`, userID : `${res.locals.user}`, limit, offset}});
+        const { count , rows } = await AnswerComment.findAndCountAll({ where : {answerID , userID , limit, offset}});
         if( count == 0 ) res.json({ state : "empty", message : "답변이 없음"});
         res.json(rows);
     }catch(error){
@@ -13,11 +15,11 @@ const getComments = (async(req,res,next) =>{
 })
 
 const postComment = (async(req,res,next)=>{
+    const { userID, answerID } = req.params;
+    const { commentContent } = req.body;
     try{
-    const { commentContent }= req.body;
-    const user = await User.findOne({ where : { userID : `${res.locals.user}`}})
-    const answer = await Answer.findOne({ where : {id : `${req.params.id}`}});
-    
+    const user = await User.findOne({ where : { userID }})
+    const answer = await Answer.findOne({ where : { answerID }});
     const comment = await AnswerComment.create({
         commentContent,
     })
@@ -28,14 +30,16 @@ const postComment = (async(req,res,next)=>{
         next(error);
     }
 })
-const patchComment = (async(req,res,next) =>{
+const putComment = (async(req,res,next) =>{
+    const { userID, answerID, commentID } = req.params;
+    const { commentContent } = req.body;
     try{
-        const { commentContent } = req.body;
+        const comment = findByPk(commentID);
+        if(comment.userID != userID) res.json({ state : "notPermissioned"});
         await AnswerComment.update({
             commentContent,
         },{
-            where : { id : `${req.params.class}`},
-
+            where : { id : commentID },
         })
         res.json({ state : "updateDone", message : "업데이트 완료됨"});
     }catch(error){
@@ -45,16 +49,20 @@ const patchComment = (async(req,res,next) =>{
 })
 
 const deleteComment = (async(req,res,next) =>{
+    const { userID, answerID, commentID } = req.params;
     try{
+        const user = await findByPk(userID);
+        const answer = await findByPk(answerID);
         await AnswerComment.destroy({
-            where : { id : `${req.params.class}`},
+            where : { id : commentID },
         })
+        user.removeAnswerComments(commentID)
+        answer.removeAnswerComments(commentID)
         res.json({state : "destroyDone", message : "삭제 완료됨"});
     }catch(error){
         console.error(error);
         next(error);
     }
-
 });
 
-module.exports = {patchComment, deleteComment, getComments, postComment};
+module.exports = {putComment, deleteComment, getComments, postComment};
