@@ -1,12 +1,22 @@
 const express = require('express');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const { sequelize } = require('./models');
 
 dotenv.config();
 
 const app = express();
 
 app.set('port', process.env.PORT || 3000);
+
+//db connect
+sequelize.sync({ force: true })
+  .then(() => {
+    console.log('DB connected!');
+  })
+  .catch((err) => {
+    console.error(err);
+  })
 
 app.use(morgan('dev'));
 
