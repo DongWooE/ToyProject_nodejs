@@ -1,6 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const router = require('./routes')
 const { sequelize } = require('./models');
 
 dotenv.config();
@@ -10,7 +11,7 @@ const app = express();
 app.set('port', process.env.PORT || 3000);
 
 //db connect
-sequelize.sync({ force: true })
+sequelize.sync({ force: false })
   .then(() => {
     console.log('DB connected!');
   })
@@ -19,6 +20,7 @@ sequelize.sync({ force: true })
   })
 
 app.use(morgan('dev'));
+app.use('/', router);
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} router not existed`);
